@@ -1,0 +1,109 @@
+<html>
+  <body>
+    <section>
+      <h2>Nova Guia (Recepcionar Cliente)</h2>
+      <form id="nova-guia">
+        <label>
+          Carteirinha
+          <input name="carteirinha" />
+        </label>
+
+        <label>
+          Especialidade
+          <input name="especialidade" />
+        </label>
+
+        <p id="nova-guia_mensagem"></p>
+
+        <button type="submit">Emitir guia</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Faturar</h2>
+
+      <form id="faturar">
+        <label>
+          Ano
+          <input name="ano" type="number" />
+        </label>
+
+        <label>
+          Mês
+          <input name="mes" type="number" />
+        </label>
+
+        <p id="faturar_mensagem"></p>
+
+        <button type="submit">
+          Faturar
+        </button>
+      </form>
+    </section>
+
+    <script src="./desafio.js"></script>
+    <script>
+      const $formNovaGuia = document.getElementById("nova-guia");
+      $formNovaGuia.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const formData = Object.fromEntries(
+          new FormData($formNovaGuia),
+        );
+
+        const agora = new Date();
+        const resultado = await recepcionarPaciente({
+          ...formData,
+          data: agora.toLocaleDateString("en-CA"),
+        });
+
+        const $mensagem = document.getElementById("nova-guia_mensagem");
+        if (resultado.status === 204)
+          $mensagem.innerHTML = "Sucesso!";
+        else
+          $mensagem.innerHTML = resultado.error;
+      });
+
+      const $formFaturar = document.getElementById("faturar");
+      $formFaturar.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const formData = Object.fromEntries(
+          new FormData($formFaturar),
+        );
+        const $mensagem = document.getElementById("faturar_mensagem");
+
+        const mes = Number(formData.mes);
+        if (
+          !Number.isFinite(mes)
+          || !Number.isInteger(mes)
+          || mes < 1
+          || mes > 12
+        ) {
+          $mensagem.innerHTML = "Erro: O mês precisa ser um valor inteiro válido entre 1 e 12";
+          return;
+        }
+
+        const agora = new Date();
+        const ano = Number(formData.ano);
+        if (
+          !Number.isFinite(ano)
+          || !Number.isInteger(ano)
+          || ano < 2000
+          || ano > agora.getFullYear()
+        ) {
+          $mensagem.innerHTML = "Erro: O ano precisa ser um número inteiro válido entre 2000 e o ano atual";
+          return;
+        }
+
+        const resultado = await faturar({ ano, mes });
+        if (resultado.status === 204) {
+          $mensagem.innerHTML = "Faturamento encaminhado com sucesso!";
+          $formFaturar.reset();
+        }
+        else
+          $mensagem.innerHTML = `Erro: ${resultado.error}`;
+      });
+    </script>
+  </body>
+</html>
